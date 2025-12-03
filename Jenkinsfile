@@ -1,66 +1,41 @@
 pipeline {
     agent any
 
-    options {
-        timestamps()
-        buildDiscarder(logRotator(numToKeepStr: '20'))
-        disableConcurrentBuilds()
-    }
-
-    environment {
-        MAVEN_OPTS = '-Dmaven.test.failure.ignore=false'
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[url: 'file:///D:/repos/java-maven-ci-demo.git']]
-                ])
+                checkout scm
             }
         }
 
-	stage('Check env') {
-    steps {
-        bat 'where cmd'
-        bat 'where mvn'
-        bat 'java -version'
-    }
-}
-
         stage('Build') {
             steps {
-                bat 'mvn -B -U clean compile'
+                bat 'powershell -Command "mvn -B -U clean compile"'
             }
         }
 
         stage('Test') {
             steps {
-                bat 'mvn -B test'
-            }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
-                }
+                bat 'powershell -Command \"mvn -B test\"'
             }
         }
 
         stage('Package') {
             steps {
-                bat 'mvn -B package'
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                bat 'powershell -Command \"mvn -B package\"'
             }
         }
 
-        stage('Deploy') {
-            when {
-                branch 'main'
-            }
+        stage('Deploy (local)') {
             steps {
-                bat 'java -jar target/java-maven-ci-demo-1.0.0.jar'
+                echo 'Deploy skipped (local env)'
             }
+        }
+    }
+
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'
         }
     }
 }
