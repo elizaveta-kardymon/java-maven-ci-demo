@@ -22,6 +22,14 @@ pipeline {
             }
         }
 
+	stage('Check env') {
+    steps {
+        bat 'where cmd'
+        bat 'where mvn'
+        bat 'java -version'
+    }
+}
+
         stage('Build') {
             steps {
                 bat 'mvn -B -U clean compile'
